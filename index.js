@@ -15,7 +15,8 @@ const app = express()
 const salt = bcrypt.genSaltSync(10)
 const secret = 'asdflkjhg'
 
-app.use(cors({ credentials: true, origin: 'https://rtblogz.netlify.app/' }))
+// app.use(cors({ credentials: true, origin: 'https://rtblogz.netlify.app/' }))
+app.use(cors({ credentials: true, origin: 'https://rtblog.onrender.com' }))
 
 app.use(express.json())
 app.use(cookieParser())
