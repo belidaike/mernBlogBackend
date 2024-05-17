@@ -15,7 +15,9 @@ const app = express()
 const salt = bcrypt.genSaltSync(10)
 const secret = 'asdflkjhg'
 
-app.use(cors({ credentials: true, origin: 'https://rtblog-com.onrender.com' }))
+// app.use(cors({ credentials: true, origin: 'http://localhost:3000' }))
+app.use(cors({ credentials: true, origin: 'https://rtblogz.netlify.app/' }))
+
 app.use(express.json())
 app.use(cookieParser())
 app.use('/uploads', express.static(__dirname + '/uploads'))
@@ -121,6 +123,61 @@ app.get('/post/:id', async (req, res) => {
         .populate('author', ['username'])
     res.json(postDoc)
 })
+
+app.put('/post/:id', uploadMiddleware.single('file'), async (req, res) => {
+    const { id } = req.params;
+    let newPath = null;
+    if (req.file) {
+        const { originalname, path } = req.file;
+        const parts = originalname.split('.');
+        const ext = parts[parts.length - 1];
+        newPath = path + '.' + ext;
+        fs.renameSync(path, newPath);
+    }
+    const { token } = req.cookies;
+    jwt.verify(token, secret, {}, async (err, info) => {
+        if (err) {
+            return res.status(401).json('Token verification failed');
+        }
+        const { title, summary, content, category } = req.body;
+        const postDoc = await Post.findById(id);
+        if (!postDoc) {
+            return res.status(404).json('Post not found');
+        }
+        if (postDoc.author.toString() !== info.id) {
+            return res.status(403).json('You are not the author of this post');
+        }
+        postDoc.title = title;
+        postDoc.summary = summary;
+        postDoc.content = content;
+        postDoc.category = category;
+        if (newPath) {
+            postDoc.cover = newPath;
+        }
+        await postDoc.save();
+        res.json(postDoc);
+    });
+});
+
+app.delete('/post/:id', async (req, res) => {
+    const { id } = req.params;
+    const { token } = req.cookies;
+
+    jwt.verify(token, secret, {}, async (err, info) => {
+        if (err) return res.status(401).json('Token verification failed');
+
+        const postDoc = await Post.findById(id);
+        if (!postDoc) return res.status(404).json('Post not found');
+
+        if (postDoc.author.toString() !== info.id) {
+            return res.status(403).json('You are not the author of this post');
+        }
+
+        await Post.findByIdAndDelete(id);
+        res.json('Post deleted');
+    });
+});
+
 
 app.listen(4000, () => {
     console.log('listening to port 4000')
