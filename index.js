@@ -15,8 +15,8 @@ const app = express()
 const salt = bcrypt.genSaltSync(10)
 const secret = 'asdflkjhg'
 
-app.use(cors({ credentials: true, origin: 'https://rtblogz.netlify.app/' }))
-// app.use(cors({ credentials: true, origin: 'https://rtblog.onrender.com' }))
+// app.use(cors({ credentials: true, origin: 'https://rtblogz.netlify.app/' }))
+app.use(cors({ credentials: true, origin: 'https://rtblog-com.onrender.com' }))
 
 app.use(express.json())
 app.use(cookieParser())
@@ -179,7 +179,7 @@ app.delete('/post/:id', async (req, res) => {
 });
 
 // https://mernpartialbackend.onrender.com/
-app.listen(() => {
+app.listen(4000, () => {
     console.log('listening to port 4000')
 })
 
