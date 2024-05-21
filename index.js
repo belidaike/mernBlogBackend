@@ -191,8 +191,6 @@ app.delete('/post/:id', async (req, res) => {
     });
 });
 
-// https://mernpartialbackend.onrender.com/
 app.listen(4000, () => {
     console.log('listening to port 4000')
 })
-
