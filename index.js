@@ -15,7 +15,21 @@ const app = express()
 const salt = bcrypt.genSaltSync(10)
 const secret = 'asdflkjhg'
 
-app.use(cors({ credentials: true, origin: 'https://rtblogz.netlify.app/' }))
+// app.use(cors({ credentials: true, origin: 'https://rtblogz.netlify.app/' }))
+
+const allowedOrigins = ['https://rtblogz.netlify.app'];
+
+app.use(cors({
+    credentials: true,
+    origin: function (origin, callback) {
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
+}));
+
 
 app.use(express.json())
 app.use(cookieParser())
