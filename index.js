@@ -1,4 +1,5 @@
 const express = require('express')
+const path = require('path')
 const cors = require('cors')
 const mongoose = require('mongoose')
 const User = require('./models/User')
@@ -15,9 +16,10 @@ const app = express()
 const salt = bcrypt.genSaltSync(10)
 const secret = 'asdflkjhg'
 
-// app.use(cors({ credentials: true, origin: 'https://rtblogz.netlify.app/' }))
+// app.use(cors({ credentials: true, origin: 'http://localhost:3000' }))
 
 const allowedOrigins = ['https://rtblogz.netlify.app'];
+app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.use(cors({
     credentials: true,
@@ -190,7 +192,10 @@ app.delete('/post/:id', async (req, res) => {
         res.json('Post deleted');
     });
 });
-
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build/index.html'));
+});
 app.listen(4000, () => {
     console.log('listening to port 4000')
 })
+
