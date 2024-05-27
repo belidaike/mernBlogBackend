@@ -54,38 +54,39 @@ app.post('/register', async (req, res) => {
 })
 
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body
-    const userDoc = await User.findOne({ username })
-    const passOk = bcrypt.compareSync(password, userDoc.password)
-    // res.json(passOk)
-    if (passOk) {
-        //logged in
-        jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
-            if (err) throw err
-            res.cookie('token', token).json({
-                id: userDoc._id,
-                username,
-            })
-        })
-    } else {
-        res.status(400).json('wrong credentials')
+    const { username, password } = req.body;
+    try {
+        const userDoc = await User.findOne({ username });
+        if (!userDoc) return res.status(400).json({ message: 'Wrong credentials' });
+        const passOk = bcrypt.compareSync(password, userDoc.password);
+        if (passOk) {
+            jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
+                if (err) return res.status(500).json({ message: 'Token generation failed', error: err });
+                res.cookie('token', token, { httpOnly: true }).json({
+                    id: userDoc._id,
+                    username,
+                });
+            });
+        } else {
+            res.status(400).json({ message: 'Wrong credentials' });
+        }
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err });
     }
-})
+});
+
 
 app.get('/profile', (req, res) => {
-    const { token } = req.cookies
+    const { token } = req.cookies;
     if (token) {
         jwt.verify(token, secret, {}, (err, info) => {
-            if (err) {
-                console.log('')
-            }
-            res.json(info)
-        })
+            if (err) return res.status(401).json({ message: 'Token verification failed', error: err });
+            res.json(info);
+        });
     } else {
-        return null
+        res.status(401).json({ message: 'No token provided' });
     }
-
-})
+});
 
 app.post('/logout', (req, res) => {
     res.cookie('token', '').json('ok')
@@ -198,4 +199,3 @@ app.get('*', (req, res) => {
 app.listen(4000, () => {
     console.log('listening to port 4000')
 })
-
