@@ -2,9 +2,8 @@ const express = require('express')
 const path = require('path')
 const cors = require('cors')
 const mongoose = require('mongoose')
-const User = require('./models/User')
+const authRoutes = require('./routes/auth.routes.js')
 const Post = require('./models/Post')
-const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 const multer = require('multer')
@@ -13,12 +12,10 @@ const fs = require('fs')
 
 const app = express()
 
-const salt = bcrypt.genSaltSync(10)
-const secret = 'asdflkjhg'
-
 // app.use(cors({ credentials: true, origin: 'http://localhost:3000' }))
 
 const allowedOrigins = ['https://rtblogz.netlify.app'];
+// const allowedOrigins = ['http://localhost:3000'];
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.use(cors({
@@ -39,58 +36,62 @@ app.use('/uploads', express.static(__dirname + '/uploads'))
 
 mongoose.connect('mongodb+srv://ikebelida539:09109672506@cluster0.mre8jcv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
 
-app.post('/register', async (req, res) => {
-    const { username, password, email } = req.body
-    try {
-        const userDoc = await User.create({
-            username,
-            password: bcrypt.hashSync(password, salt),
-            email
-        })
-        res.json(userDoc)
-    } catch (err) {
-        res.status(409).json(err)
-    }
-})
 
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    try {
-        const userDoc = await User.findOne({ username });
-        if (!userDoc) return res.status(400).json({ message: 'Wrong credentials' });
-        const passOk = bcrypt.compareSync(password, userDoc.password);
-        if (passOk) {
-            jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
-                if (err) return res.status(500).json({ message: 'Token generation failed', error: err });
-                res.cookie('token', token, { httpOnly: true }).json({
-                    id: userDoc._id,
-                    username,
-                });
-            });
-        } else {
-            res.status(400).json({ message: 'Wrong credentials' });
-        }
-    } catch (err) {
-        res.status(500).json({ message: 'Server error', error: err });
-    }
-});
+// ORGANIZED DONE AND DUSTED HORAAA!
+// app.post('/register', async (req, res) => {
+//     const { username, password, email } = req.body
+//     try {
+//         const userDoc = await User.create({
+//             username,
+//             password: bcrypt.hashSync(password, salt),
+//             email
+//         })
+//         res.json(userDoc)
+//     } catch (err) {
+//         res.status(409).json(err)
+//     }
+// })
+
+// app.post('/login', async (req, res) => {
+//     const { username, password } = req.body;
+//     try {
+//         const userDoc = await User.findOne({ username });
+//         if (!userDoc) return res.status(400).json({ message: 'Wrong credentials' });
+//         const passOk = bcrypt.compareSync(password, userDoc.password);
+//         if (passOk) {
+//             jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
+//                 if (err) return res.status(500).json({ message: 'Token generation failed', error: err });
+//                 res.cookie('token', token, { httpOnly: true }).json({
+//                     id: userDoc._id,
+//                     username,
+//                 });
+//             });
+//         } else {
+//             res.status(400).json({ message: 'Wrong credentials' });
+//         }
+//     } catch (err) {
+//         res.status(500).json({ message: 'Server error', error: err });
+//     }
+// });
 
 
-app.get('/profile', (req, res) => {
-    const { token } = req.cookies;
-    if (token) {
-        jwt.verify(token, secret, {}, (err, info) => {
-            if (err) return res.status(401).json({ message: 'Token verification failed', error: err });
-            res.json(info);
-        });
-    } else {
-        res.status(401).json({ message: 'No token provided' });
-    }
-});
+// app.get('/profile', (req, res) => {
+//     const { token } = req.cookies;
+//     if (token) {
+//         jwt.verify(token, secret, {}, (err, info) => {
+//             if (err) return res.status(401).json({ message: 'Token verification failed', error: err });
+//             res.json(info);
+//         });
+//     } else {
+//         res.status(401).json({ message: 'No token provided' });
+//     }
+// });
 
-app.post('/logout', (req, res) => {
-    res.cookie('token', '').json('ok')
-})
+// app.post('/logout', (req, res) => {
+//     res.cookie('token', '').json('ok')
+// })
+app.use("/api/auth", authRoutes)
+
 
 app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
     const { originalname, path } = req.file
